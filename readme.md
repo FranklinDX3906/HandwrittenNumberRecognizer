@@ -12,20 +12,44 @@
 - 其他要求
   - 在Windows上运行
   - 可执行文件双击运行
+- 环境
+  - python 3.7
+  - pytorch_cuda
+  - opencv-python
+
+---
 
 ## 开发思路
 
 ### 总体思路
 
-1. python实现手写字的图片分割
-2. python实现单个数字被分割之后的灰度处理、分辨率处理（28*28）
-3. python实现上述处理之后调用训练好的模型读取并打印
+1. python实现手写字的图片分割、处理、预测，返回
+2. 训练模型
 4. python实现GUI框架
-5. 打包
+5. 打包为exe
 
-### 实现手写数字的图片分割
+### 实现手写数字的图片分割等
 
+- 输入：图片路径
+- 过程：
+  1. 读取文件
+  2. 灰度化
+  3. 反转、二值化
+  4. 使用opencv框出图片
+  5. 处理为28*28手写字图片
+  6. 以此使用模型预测数次
+- 输出
+  - 二值化之后的图片
+  - 框出值之后的图片
+  - 预测后框出的图片
+  - 数字序列
+  
 - 思路
   - 找代码，修改
-  - 找到了使用keras的范例：[HandwrittenDigitRecognition](https://github.com/Wangzg123/HandwrittenDigitRecognition)，准备将其修改为pytorch代码
+  - 范例：[HandwrittenDigitRecognition](https://github.com/Wangzg123/HandwrittenDigitRecognition)，准备将其修改
+  
+  - 每个处理函数都以图片作为输入和输出
 
+- 问题
+  - 由于输入的初始图象存在阴影、杂质等各种现象，所以根据不同的初始图片，识别框还有二值化阈值可能需要调整
+    - 解决方法：GUI上增加三项调节条，且显示二值化结果，方便随时调整
