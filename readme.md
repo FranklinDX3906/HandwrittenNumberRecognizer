@@ -49,7 +49,18 @@
   - 范例：[HandwrittenDigitRecognition](https://github.com/Wangzg123/HandwrittenDigitRecognition)，准备将其修改
   
   - 每个处理函数都以图片作为输入和输出
+  - 训练模型参考：[使用PyTorch实现CNN](https://blog.csdn.net/qq_34714751/article/details/85610966)
 
 - 问题
   - 由于输入的初始图象存在阴影、杂质等各种现象，所以根据不同的初始图片，识别框还有二值化阈值可能需要调整
     - 解决方法：GUI上增加三项调节条，且显示二值化结果，方便随时调整
+  - 实际识别率还有一些问题
+    - 影响不大，不管了
+  - 手写字体非常难以在纸面上进行排序
+    - 放弃输出数字序列
+
+### 训练模型
+
+- CNN训练即可，保存
+
+###GUI框架

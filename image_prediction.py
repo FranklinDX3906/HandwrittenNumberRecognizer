@@ -4,6 +4,8 @@
 
 import cv2
 import numpy as np
+import torch
+# from myCNN import MyCNN
 
 
 # 将图片灰度化
@@ -34,7 +36,7 @@ def inverse_img(img):
 
 # 二值化图像
 def binarization_img(img, threshold=128):
-    _, img = cv2.threshold(img, threshold, 0, cv2.THRESH_TOZERO)
+    _, img = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
     # cv2.imshow('3', img)
     return img
 
@@ -52,6 +54,9 @@ def borders_img(img, minsize=50, maxsize=5000):
         if (size > minsize) & (size < maxsize):
             border = [(x, y), (x+w, y+h)]
             borders.append(border)
+
+    # borders.sort(key=sortlambda)
+    # print(borders[0][0][0])
     return borders
 
 
@@ -66,6 +71,52 @@ def draw_borders(img, borders):
     return img
 
 
+# 转化为28*28手写数据
+def minist_img(img, borders, size=(28, 28)):
+    img_data = np.zeros((len(borders), size[0], size[0]), dtype='uint8')
+    # img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    # img = accessBinary(img)
+    for i, border in enumerate(borders):
+        border_img = img[border[0][1]:border[1][1], border[0][0]:border[1][0]]
+        # 扩展，否则图片有问题
+        stride_length = (border_img.shape[0]-border_img.shape[1]) // 2
+        if(stride_length > 0):
+            border_img = cv2.copyMakeBorder(
+                border_img, 7, 7, stride_length + 7, stride_length + 7, cv2.BORDER_CONSTANT)
+        else:
+            stride_length = -1*stride_length
+            border_img = cv2.copyMakeBorder(
+                border_img, stride_length+7, stride_length+7, 7, 7, cv2.BORDER_CONSTANT)
+
+        border_img = cv2.resize(border_img, size)
+        # border_img = np.expand_dims(border_img, axis=0)  # 扩维，否则不是图片
+        img_data[i] = border_img
+        # img_data[i] = np.expand_dims
+    return img_data
+
+
+# 预测数字
+def prediction(img_data):
+    # model = MyCNN()
+    model = torch.load("mycnn_minist.pth")
+    # model =  torch.load(model_path)
+
+    result = []
+
+    for img in img_data:
+        img = np.expand_dims(img, axis=0)  # 扩维，输入数据
+        img = np.expand_dims(img, axis=0)  # 扩维，输入数据
+
+        img = torch.Tensor(img)
+        img = img.to('cuda:0')
+        # print(img.size())
+        output = model.forward(img)
+        _, number = torch.max(output.data, 1)
+        result.append(number.item())
+
+    return result
+
+
 if __name__ == '__main__':
 
     img_path = './test4.jpg'
@@ -75,7 +126,17 @@ if __name__ == '__main__':
     _img = grayscale_image(img)  # 灰度化
     _img = inverse_img(_img)  # 反相
     _img = binarization_img(_img)  # 二值化
+    # cv2.imshow('1',_img)
+    # cv2.waitKey(0)
     borders = borders_img(_img)  # 找边框
-    _img = draw_borders(img, borders)
-    cv2.imshow('test', _img)
+    # print(borders)
+    borders_img = draw_borders(img, borders)  # 将边框放在图上
+    cv2.imshow('test', borders_img)
     cv2.waitKey(0)
+    img_data = minist_img(_img, borders)
+    # cv2.imshow('test', img_data[0])
+    # print(imgdata[0])
+    # cv2.waitKey(0)
+    # model_path = './mycnn_minist.pth'
+    result = prediction(img_data)
+    print(result)
