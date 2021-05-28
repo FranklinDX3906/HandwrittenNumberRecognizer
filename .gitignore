@@ -1,6 +1,3 @@
 MNIST_DATA_PyTorch/
 .vscode/
 __pycache__/
-test.py
-gui.py
-gui.ui
