@@ -144,4 +144,4 @@ plt.savefig('accuracy.png')
 plt.show()
 
 # 记录结果
-torch.save(model, './mycnn_minist.pth')
+torch.save(model, '../mycnn_minist.pth')
