@@ -4,6 +4,8 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 # from PyQt5.QtWidgets import MainWindow
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import cv2
+import image_prediction as ip
+import os
 
 
 class MainWindow_MINIST(QtWidgets.QMainWindow):
@@ -13,7 +15,7 @@ class MainWindow_MINIST(QtWidgets.QMainWindow):
         self.ui_setup(self)
 
         # 初始化值
-        self.img_ori = None
+        self.img_path = None
 
     def ui_setup(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -73,10 +75,11 @@ class MainWindow_MINIST(QtWidgets.QMainWindow):
         self.pic_label.setStyleSheet("border: 1px solid black;")
         # self.pic_widget.setObjectName("widget")
 
-        # 黑白阈值条
+        # 黑白阈值条 灰度=value*2+29
         self.threshold_bar = QtWidgets.QScrollBar(MainWindow)
         self.threshold_bar.setGeometry(QtCore.QRect(50, 120, 20, 600))
         self.threshold_bar.setOrientation(QtCore.Qt.Vertical)
+        self.threshold_bar.setValue(50)  # 初始阈值129
         # self.threshold_bar.setValue(1000)
         # self.threshold_bar.setStyleSheet("border: 1px solid black;")
         # self.threshold_bar.setObjectName("verticalScrollBar")
@@ -88,10 +91,11 @@ class MainWindow_MINIST(QtWidgets.QMainWindow):
         # self.label_1.setObjectName("label")
         self.label_1.setText(_translate("MainWindow", "黑白"))
 
-        # 画框最小值条
+        # 画框最小值条 0~198
         self.min_bar = QtWidgets.QScrollBar(MainWindow)
         self.min_bar.setGeometry(QtCore.QRect(115, 120, 20, 600))
         self.min_bar.setOrientation(QtCore.Qt.Vertical)
+        self.min_bar.setValue(25)
         # self.min_bar.setObjectName("verticalScrollBar_2")
         self.label_2 = QtWidgets.QLabel(MainWindow)
         self.label_2.setGeometry(QtCore.QRect(100, 750, 45, 20))
@@ -101,10 +105,11 @@ class MainWindow_MINIST(QtWidgets.QMainWindow):
         # self.label_2.setObjectName("label_2")
         self.label_2.setText(_translate("MainWindow", "最小框"))
 
-        # 画框最大值
+        # 画框最大值 4000~5980 size = value*20+4000
         self.max_bar = QtWidgets.QScrollBar(MainWindow)
         self.max_bar.setGeometry(QtCore.QRect(180, 120, 20, 600))
         self.max_bar.setOrientation(QtCore.Qt.Vertical)
+        self.max_bar.setValue(50)
         # self.max_bar.setObjectName("verticalScrollBar_3")
         self.label_3 = QtWidgets.QLabel(MainWindow)
         self.label_3.setGeometry(QtCore.QRect(170, 750, 45, 20))
@@ -123,15 +128,15 @@ class MainWindow_MINIST(QtWidgets.QMainWindow):
 
     def open_click(self):  # 打开文件按钮
         # print(self.threshold_bar.value())
-        file_path, _ = QFileDialog.getOpenFileName(self, '选择文件')
+        self.img_path, _ = QFileDialog.getOpenFileName(self, '选择文件')
         # print(file_path)
 
         # 读取，处理并显示图片
-        self.img_ori = cv2.imread(file_path)
-        self.img_ori = cv2.resize(self.img_ori, (1200, 900))  # 分辨率降低，否则太大
+        img_ori = cv2.imread(self.img_path)
+        img_ori = cv2.resize(img_ori, (1200, 900))  # 分辨率降低，否则太大
         # cv2.imshow('1',self.img_ori)
 
-        shrink = cv2.cvtColor(self.img_ori, cv2.COLOR_BGR2RGB)
+        shrink = cv2.cvtColor(img_ori, cv2.COLOR_BGR2RGB)
         # cv 图片转换成 qt图片
         img_ori_show = QtGui.QImage(
             shrink.data, shrink.shape[1], shrink.shape[0], shrink.shape[1] * 3, QtGui.QImage.Format_RGB888)
@@ -140,11 +145,58 @@ class MainWindow_MINIST(QtWidgets.QMainWindow):
         # self.pic_label.show()
 
     def bin_click(self):
-        if not self.img_ori:
+        if (self.img_path is not None):
+            # 读取，处理并显示图片
+            img_ori = cv2.imread(self.img_path)
+            img_ori = cv2.resize(img_ori, (1200, 900))  # 分辨率降低，否则太大
+
+            # 获得阈值
+            threshold = self.threshold_bar.value()*2+29
+
+            # 二值化
+            img = ip.grayscale_image(img_ori)  # 灰度化
+            img = ip.inverse_img(img)  # 灰度反相
+            img = ip.binarization_img(img, threshold=threshold)  # 二值化
+
+            # 显示
+            shrink = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            # cv 图片转换成 qt图片
+            img_show = QtGui.QImage(
+                shrink.data, shrink.shape[1], shrink.shape[0], shrink.shape[1] * 3, QtGui.QImage.Format_RGB888)
+            # label 控件显示图片
+            self.pic_label.setPixmap(QtGui.QPixmap.fromImage(img_show))
+            # self.pic_label.show()
+        else:
             QMessageBox.critical(MainWindow, '出错啦！', '未找到图片')
 
     def result_click(self):
-        if not self.img_ori:
+        if (self.img_path is not None):
+            # 读取，处理并显示图片
+            img_ori = cv2.imread(self.img_path)
+            img_ori = cv2.resize(img_ori, (1200, 900))  # 分辨率降低，否则太大
+
+            threshold = self.threshold_bar.value()*2+29
+            minvalue = self.min_bar.value()*2
+            maxvalue = self.max_bar.value()*20+4000
+
+            img = ip.grayscale_image(img_ori)
+            img = ip.inverse_img(img)  # 灰度反相
+            img = ip.binarization_img(img, threshold=threshold)  # 二值化
+
+            borders = ip.borders_img(img, minsize=minvalue, maxsize=maxvalue)
+            img_data = ip.minist_img(img, borders)
+            result = ip.prediction(img_data)
+
+            img = ip.draw_borders(img_ori, borders, result)
+
+            # 显示
+            shrink = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            # cv 图片转换成 qt图片
+            img_show = QtGui.QImage(
+                shrink.data, shrink.shape[1], shrink.shape[0], shrink.shape[1] * 3, QtGui.QImage.Format_RGB888)
+            # label 控件显示图片
+            self.pic_label.setPixmap(QtGui.QPixmap.fromImage(img_show))
+        else:
             QMessageBox.critical(MainWindow, '出错啦！', '未找到图片')
 
 
@@ -157,3 +209,5 @@ if __name__ == "__main__":
     MainWindow.show()
     # print(ui.threshold_bar.value())
     sys.exit(app.exec_())
+
+    os.system("pause")

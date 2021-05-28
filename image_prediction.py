@@ -61,11 +61,13 @@ def borders_img(img, minsize=50, maxsize=5000):
 
 
 # 显示结果及边框
-def draw_borders(img, borders):
+def draw_borders(img, borders, results):
     # 绘制
     # print(img.shape)
     for i, border in enumerate(borders):
         cv2.rectangle(img, border[0], border[1], (0, 0, 255))
+        cv2.putText(img, str(results[i]), border[0],
+                    cv2.FONT_HERSHEY_COMPLEX, 0.8, (255, 0, 0), 1)
     # cv2.imshow('test', img)
     # cv2.waitKey(0)
     return img
@@ -98,7 +100,7 @@ def minist_img(img, borders, size=(28, 28)):
 # 预测数字
 def prediction(img_data):
     # model = MyCNN()
-    model = torch.load("mycnn_minist.pth")
+    model = torch.load("X:/projects/HandwrittenNumberRecognizer/mycnn_minist.pth")
     # model =  torch.load(model_path)
 
     result = []
@@ -117,26 +119,30 @@ def prediction(img_data):
     return result
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    img_path = './test4.jpg'
-    img = cv2.imread(img_path)
-    img = cv2.resize(img, (1200, 900))  # 分辨率降低，否则太大
+#     img_path = './test1.jpg'
+#     img = cv2.imread(img_path)
+#     img = cv2.resize(img, (1200, 900))  # 分辨率降低，否则太大
 
-    _img = grayscale_image(img)  # 灰度化
-    _img = inverse_img(_img)  # 反相
-    _img = binarization_img(_img)  # 二值化
-    # cv2.imshow('1',_img)
-    # cv2.waitKey(0)
-    borders = borders_img(_img)  # 找边框
-    # print(borders)
-    borders_img = draw_borders(img, borders)  # 将边框放在图上
-    cv2.imshow('test', borders_img)
-    cv2.waitKey(0)
-    img_data = minist_img(_img, borders)
-    # cv2.imshow('test', img_data[0])
-    # print(imgdata[0])
-    # cv2.waitKey(0)
-    # model_path = './mycnn_minist.pth'
-    result = prediction(img_data)
-    print(result)
+#     _img = grayscale_image(img)  # 灰度化
+#     _img = inverse_img(_img)  # 反相
+#     _img = binarization_img(_img)  # 二值化
+#     # cv2.imshow('1',_img)
+#     # cv2.waitKey(0)
+#     borders = borders_img(_img)  # 找边框
+#     # print(borders)
+#     # borders_img = draw_borders(img, borders)  # 将边框放在图上
+#     # cv2.imshow('test', borders_img)
+#     # cv2.waitKey(0)
+#     img_data = minist_img(_img, borders)
+#     # cv2.imshow('test', img_data[0])
+#     # print(imgdata[0])
+#     # cv2.waitKey(0)
+#     # model_path = './mycnn_minist.pth'
+#     result = prediction(img_data)
+
+#     # print(result)
+#     img = draw_borders(img, borders, result)
+#     cv2.imshow('test', img)
+#     cv2.waitKey(0)
