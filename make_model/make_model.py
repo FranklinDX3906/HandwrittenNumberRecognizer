@@ -17,7 +17,7 @@ data_tf = torchvision.transforms.Compose(
     ]
 )
 
-data_path = './MNIST_DATA_PyTorch'
+data_path = '../MNIST_DATA_PyTorch'
 # 获取数据集
 train_data = torchvision.datasets.mnist.MNIST(
     data_path, train=True, transform=data_tf, download=False)
